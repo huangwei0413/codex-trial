@@ -1,0 +1,5 @@
+.gocache/
+.mcp/
+bin/
+vendor/
+students.db
