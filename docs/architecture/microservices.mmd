@@ -1,0 +1,73 @@
+flowchart LR
+  subgraph External
+    Client["Clients\n(Web / Mobile / 3rd party)"]
+  end
+
+  subgraph Edge
+    APIGW["API Gateway\n(ingress / routing / auth)"]
+    CDN["CDN / WAF"]
+  end
+
+  Client --> CDN --> APIGW
+
+  subgraph Services[Backend Services]
+    AuthSvc["Auth Service\n(Token / OAuth2)"]
+    UserSvc["User Service\n(Profile / Accounts)"]
+    StudentSvc["Student Service\n(student-api)"]
+    CourseSvc["Course Service"]
+    BillingSvc["Billing Service"]
+    NotificationSvc["Notification Service\n(email / push / sms"]
+    SearchSvc["Search Service\n(elasticsearch)"]
+  end
+
+  APIGW --> AuthSvc
+  APIGW --> UserSvc
+  APIGW --> StudentSvc
+  APIGW --> CourseSvc
+  APIGW --> BillingSvc
+  APIGW --> NotificationSvc
+  APIGW --> SearchSvc
+
+  subgraph DataStores[Datastores]
+    UserDB[("Users DB\n(Postgres)")]
+    StudentDB[("Students DB\n(Postgres)")]
+    CourseDB[("Courses DB\n(Postgres)")]
+    BillingDB[("Billing DB\n(Postgres)")]
+    ES[("Elasticsearch")]
+    Blob[("Object Storage\n(S3)")]
+  end
+
+  UserSvc --> UserDB
+  StudentSvc --> StudentDB
+  CourseSvc --> CourseDB
+  BillingSvc --> BillingDB
+  SearchSvc --> ES
+  NotificationSvc --> Blob
+
+  subgraph Messaging[Messaging & Integration]
+    Broker[("Message Broker\n(Kafka / RabbitMQ)")]
+  end
+
+  StudentSvc -->|events| Broker
+  CourseSvc -->|events| Broker
+  BillingSvc -->|events| Broker
+  NotificationSvc -->|consume| Broker
+  SearchSvc -->|index events| Broker
+
+  subgraph Infra[Infrastructure & Ops]
+    K8s[("Kubernetes Cluster")]
+    CI[("CI/CD\n(GitHub Actions / Jenkins)")]
+    Prom["Prometheus"]
+    Graf["Grafana"]
+    Tracing["Jaeger / OpenTelemetry"]
+  end
+
+  Services --> K8s
+  DataStores --> K8s
+  Broker --> K8s
+  K8s -->|metrics| Prom --> Graf
+  Services --> Tracing
+  K8s --> CI
+
+  classDef infra fill:#f9f9f9,stroke:#333,stroke-width:1px;
+  class Infra,K8s,CI,Prom,Graf,Tracing infra;
